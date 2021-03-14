@@ -32,7 +32,7 @@ def ero3(A,i,j): # swap Ri and Rj, modifies A
     for k in range(len(A[0])):
         A[i][k],A[j][k] = A[j][k],A[i][k]
 
-def rref(A): # modifies A and returns the REF of A
+def rref(A): # modifies A and returns the RREF of A
     # start from A_{1,1}
     curr_col = 0
     curr_row = 0
@@ -86,3 +86,17 @@ def rref(A): # modifies A and returns the REF of A
             ero2(A,j,pivots[i][0],-A[j][pivots[i][1]])
 
     return A
+
+def pp(A): # pretty print
+    for r in A:
+        """
+        for c in r:
+            print(c, end = " ")
+        print()
+        """
+        print(r)
+    print()
+
+mat = [[1,2,3],[4,5,6],[7,8,31/7]]
+pp(mat)
+pp(rref(mat))
