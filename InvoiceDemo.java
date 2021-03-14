@@ -35,7 +35,6 @@ class Invoice implements Payable {
         return quantity * pricePerItem;
     }
 
-    
     public String toString(){
         return String.format("Invoice:\nPart number : %s (%s)\nQuantity : %d\nPrice per item : $%,.2f",partNumber,partDescription,quantity,pricePerItem);
     }
@@ -78,4 +77,3 @@ public class InvoiceDemo {
         System.out.printf("Total = $%,.2f\n\n",total);
     }
 }
-
