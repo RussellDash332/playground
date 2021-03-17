@@ -320,11 +320,11 @@ class AVL {
 
     // Helper method for select
     public Vertex select(Vertex T, int k) { // O(log N)
-        if (rank(T.key) == k)
+        if ((T.left == null && k == 1) || (T.left != null && k == T.left.size + 1))
             return T;
-        else if (rank(T.key) < k)   // T is somewhere in the right of the subtree
-            return select(T.right, k);
-        else                        // // T is somewhere in the left of the subtree
+        else if ((T.left == null && k > 1) || (T.left != null && k > T.left.size + 1)) // T is somewhere in the right of the subtree
+            return T.left == null ? select(T.right, k-1) : select(T.right, k-T.left.size-1);
+        else // T is somewhere in the left of the subtree
             return select(T.left, k);
     }
 
