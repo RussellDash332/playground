@@ -1,14 +1,14 @@
 import random
 import sys
 
-"""Open Shell and type this : python maze.py maze.txt"""
+"""Open Shell and type this : python3 maze.py maze.txt"""
 
 # Maze dimensions (ncols, nrows)
-nx, ny = 100, 100
+nx, ny = 10, 10
 # Maze entry position (an integer from 0 to n-1)
-ix, iy = nx-2, ny-7
+ix, iy = nx-2, ny-4
 # Maze goal position (an integer from 0 to n-1)
-gx, gy = 3, 1
+gx, gy = 1, 1
 
 # Create a maze using the depth-first algorithm described at                    
 # https://scipython.com/blog/making-a-maze/                                     
@@ -775,8 +775,8 @@ mq.solve()
 me.solve()
 print("Solution:")
 ms.print() # the same as 6 lines above this
-ms.output_image("mazestack.png", show_explored=True)
-mq.output_image("mazequeue.png", show_explored=True)
+ms.output_image("mazedfs.png", show_explored=True)
+mq.output_image("mazebfs.png", show_explored=True)
 me.output_image("mazeempty.png")
 print("States Explored by DFS:", ms.num_explored)
 print("States Explored by BFS:", mq.num_explored)
