@@ -1,4 +1,4 @@
-// Special AVL Tree that handles duplicates. The select(int k) method is not available.
+// Special AVL Tree that handles duplicates
 
 class Vertex {
     public Vertex parent, left, right;
@@ -320,6 +320,21 @@ class AVL {
                 return rank(T.right, k) + T.count; // similar to above
     }
 
+    // Selects the node with rank k
+    public Vertex select(int k) {
+        return select(root, k);
+    }
+
+    // Helper method for select
+    public Vertex select(Vertex T, int k) { // O(log N)
+        if ((T.left == null && 1 <= k && k <= T.count) || (T.left != null && T.left.size + 1 <= k && k <= T.left.size + T.count))
+            return T;
+        else if ((T.left == null && k > T.count) || (T.left != null && k > T.left.size + T.count)) // T is somewhere in the right of the subtree
+            return T.left == null ? select(T.right, k-T.count) : select(T.right, k-T.left.size-T.count);
+        else // T is somewhere in the left of the subtree
+            return select(T.left, k);
+    }
+
     // Lowest common ancestor. Assuming a and b is contained in the tree
     public int LCA(int a, int b) {
         return LCA(root, a, b);
@@ -391,6 +406,9 @@ public class AVLDemo2 {
         System.out.println(avl.bf(avl.root));       // 0
         System.out.println(avl.rank(32));           // 4
         System.out.println(avl.rank(91));           // 9
+        System.out.println(avl.select(6).key);      // 50
+        System.out.println(avl.select(4).key);      // 32
+        System.out.println(avl.select(10).key);     // 99
 
         System.out.println();
         avl.insert(37);
@@ -417,6 +435,9 @@ public class AVLDemo2 {
         System.out.println(avl.bf(avl.root));                   // 0
         System.out.println(avl.rank(32));                       // 4
         System.out.println(avl.rank(91));                       // 10
+        System.out.println(avl.select(6).key);                  // 41
+        System.out.println(avl.select(5).key);                  // 37
+        System.out.println(avl.select(10).key);                 // 91
         System.out.println(avl.root.left.right.left.key);       // 29
         System.out.println(avl.root.left.right.right.key);      // 37
 
@@ -434,12 +455,14 @@ public class AVLDemo2 {
         avl.inorder();  //  11 20 29 32 37 41 50 65 72 99
         System.out.println(avl.root.right.right.left.key);      // 72
         System.out.println(avl.rank(72));                       // 9
+        System.out.println(avl.select(8).right.key);            // 99
         System.out.println(avl.root.size);                      // 10
         System.out.println(avl.LCA(72,99));                     // 99
         System.out.println(avl.LCA(29,37));                     // 32
         System.out.println(avl.LCA(50,72));                     // 65
         System.out.println(avl.successor(50));                  // 65
         System.out.println(avl.predecessor(72));                // 65
+        System.out.println(avl.select(9).parent.key);           // 99
 
         System.out.println();
         avl.delete(99);
@@ -455,6 +478,8 @@ public class AVLDemo2 {
         avl.inorder();  //  11 20 29 32 37 41 50 65 72
         System.out.println(avl.root.right.right.key);                           // 72
         System.out.println(avl.rank(72));                                       // 9
+        System.out.println(avl.select(8).right.key);                            // 72
+        System.out.println(avl.select(7).parent.parent.left.right.right.key);   // 37
         System.out.println(avl.root.size);                                      // 9
         System.out.println(avl.LCA(72,41));                                     // 41
         System.out.println(avl.LCA(29,37));                                     // 32
@@ -482,6 +507,8 @@ public class AVLDemo2 {
         System.out.println(avl.root.right.right.key);                       // 72
         System.out.println(avl.rank(65));                                   // 7
         System.out.println(avl.rank(72));                                   // 8
+        System.out.println(avl.select(8).parent.key);                       // 65
+        System.out.println(avl.select(7).parent.left.right.right.key);      // 37
         System.out.println(avl.root.size);                                  // 8
         System.out.println(avl.LCA(72,41));                                 // 41
         System.out.println(avl.LCA(29,37));                                 // 32
@@ -510,6 +537,8 @@ public class AVLDemo2 {
         System.out.println(avl.root.right.right.key);                                           // 72
         System.out.println(avl.bf(avl.root));                                                   // 0
         System.out.println(avl.rank(37));                                                       // 5
+        System.out.println(avl.select(6).key);                                                  // 65
+        System.out.println(avl.select(6).parent.left.right.key);                                // 29
         System.out.println(avl.root.size);                                                      // 7
         System.out.println(avl.root.left.size*avl.root.right.size);                             // 9
         System.out.println(avl.LCA(72,32));                                                     // 32
@@ -557,6 +586,7 @@ public class AVLDemo2 {
         System.out.println(avl2.root.right.left.left.key);                                                  // 11
         System.out.println(avl2.root.right.left.right.key);                                                 // 15
         System.out.println(avl2.root.right.right.left.key);                                                 // 18
+        System.out.println(avl2.root.right.left.left.left.key == avl2.predecessor(avl2.select(7).key));     // true
 
         System.out.println();
         avl2.delete(7);
@@ -585,5 +615,6 @@ public class AVLDemo2 {
 
         System.out.println("TEST TREE 9");
         avl3.inorder(); //  1 1 2 3 3 3 3 4 5 6 6 6 7 7 8 8 9
+        System.out.println(avl3.select(9).key+avl3.select(10).key+avl3.select(12).key+avl3.select(14).key==24); // true
     }
 }
