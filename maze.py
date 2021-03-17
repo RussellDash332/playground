@@ -1,3 +1,5 @@
+# Source code: https://cs50.harvard.edu/ai/2020/weeks/0/
+
 import random
 import sys
 
