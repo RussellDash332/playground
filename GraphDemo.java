@@ -50,7 +50,7 @@ class AdjacencyMatrix {
     public void complement () { // only for unweighted graph
         if (!weighted) {
             for (int i = 0; i < numVertices; i++) {
-                for (int j = i+1; j < numVertices; j++) {
+                for (int j = 0; j < numVertices; j++) {
                     if (i != j) {
                         matrix[i][j] = 1-matrix[i][j]; // 0 to 1, 1 to 0
                     }
