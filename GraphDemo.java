@@ -146,7 +146,7 @@ class AdjacencyList {
         long ans = 0;
         for (int i = edges.size()-1; i >= 0; i--) {
             ans *= 7;
-            ans += outDegree(edges.get(i).first);
+            ans += edges.get(i).first;
         }
 
         return ans % 1000000007;
