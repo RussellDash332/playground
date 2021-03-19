@@ -142,14 +142,15 @@ class AdjacencyList {
 
     // For Kattis : Ab Initio
     public long vertexHash (int V) {
-        List<Pair> edges = list.get(V);
+        List<Integer> edges = list.get(V);
         long ans = 0;
         for (int i = edges.size()-1; i >= 0; i--) {
             ans *= 7;
-            ans += edges.get(i).first;
+            ans += edges.get(i);
+            ans %= 1000000007;
         }
 
-        return ans % 1000000007;
+        return ans;
     }
 
     public void connect (int a, int b) { // unweighted graph
