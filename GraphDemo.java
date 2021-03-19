@@ -79,6 +79,13 @@ class AdjacencyMatrix {
             matrix[j][i] = 0;
     }
 
+    public void clearVertex (int V) {
+        for (int i = 0; i < numVertices; i++) {
+            matrix[V][i] = 0;
+            matrix[i][V] = 0;
+        }
+    }
+
     public void deleteVertex (int V) {
         numVertices--;
         int[][] newMatrix = new int[numVertices][numVertices];
