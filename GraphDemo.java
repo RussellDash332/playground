@@ -448,7 +448,7 @@ class AdjacencyList {
     public List<Pair> MSTPrimDense (int s) { // O(V^2) for both sparse and dense. Now you can compare O(V log V) < O(V^2) < O(V^2 log V)
         int inf = Integer.MAX_VALUE;
         List<Pair> mst = new ArrayList<Pair>();
-        Integer[] A = new Integer[numVertices]; // smallest weight array
+        int[] A = new int[numVertices]; // smallest weight array
         boolean[] B = new boolean[numVertices]; // taken boolean array
         for (int i = 0; i < numVertices; i++) {
             A[i] = inf;
