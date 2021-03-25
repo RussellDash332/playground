@@ -135,6 +135,7 @@ class AdjacencyList {
     public int[] visited; // for BFS/DFS
     public int[] parent; // for BFS/DFS
     public int[] indeg; // for toposort
+    public int numEdges; // maybe useful, especially for Prim's
 
     public AdjacencyList (int V, boolean dir) {
         directed = dir;
@@ -168,9 +169,11 @@ class AdjacencyList {
 
     public void connect (int a, int b, int w) { // weighted graph
         list.get(a).add(new Pair(b,w));
+        numEdges++;
         Collections.sort(list.get(a)); // O(n) just like insertion, not O(n log n)
         if (!directed) {
             list.get(b).add(new Pair(a,w));
+            numEdges++;
             Collections.sort(list.get(b)); // O(n) just like insertion, not O(n log n)
         }
     }
@@ -416,16 +419,102 @@ class AdjacencyList {
 
         return SCC;
     }
+
+    public List<Pair> MSTPrimSparse (int s) { // O(E log V), means O(V log V) for sparse, O(V^2 log V) for dense
+        List<Pair> mst = new ArrayList<Pair>();
+        PrimComparator pc = new PrimComparator();
+        PriorityQueue<Pair> pq = new PriorityQueue<Pair>(pc);
+        boolean[] taken = new boolean[numVertices];
+        for (int i = 0; i < numVertices; i++)
+            taken[i] = false;
+        
+        mst.add(new Pair(s,0));
+        taken[s] = true;
+        for (Pair e : list.get(s)) // enqueue other edges connected to s
+            pq.add(e);
+        while (!pq.isEmpty()) { // have some unprocessed edges
+            Pair curr = pq.poll();
+            if (!taken[curr.first]) {
+                mst.add(curr);
+                taken[curr.first] = true;
+                for (Pair e : list.get(curr.first)) {
+                    if (!taken[e.first])
+                        pq.add(e);
+                }
+            }
+        }
+        return mst;
+    }
+
+    public List<Pair> MSTPrimDense (int s) { // O(V^2) for both sparse and dense. Now you can compare O(V log V) < O(V^2) < O(V^2 log V)
+        int inf = Integer.MAX_VALUE;
+        List<Pair> mst = new ArrayList<Pair>();
+        Integer[] A = new Integer[numVertices]; // smallest weight array
+        boolean[] B = new boolean[numVertices]; // taken boolean array
+        for (int i = 0; i < numVertices; i++) {
+            A[i] = inf;
+            B[i] = false;
+        }
+        A[s] = 0; // my Pair remains (v, w) not (w, v)
+
+        while (mst.size() != numVertices) {
+            // Find v where A[v] is minimum in A
+            int minIdx = 0;
+            int minVal = A[0];
+            for (int i = 1; i < numVertices; i++) {
+                if (A[i] < minVal) {
+                    minIdx = i;
+                    minVal = A[i];
+                }
+            }
+            mst.add(new Pair(minIdx,minVal));
+
+            // v already added to MST
+            B[minIdx] = true;
+            A[minIdx] = inf;
+
+            for (Pair e : list.get(minIdx)) {
+                if (!B[e.first] && A[e.first] > e.second) // if not taken and smaller weight, update array
+                    A[e.first] = e.second;
+            }
+        }
+        
+        return mst;
+    }
+
+    public int MSTCost (int s) { // Running Prim's from s, what is the MST cost?
+        // Set cutoff for Prim's Dense/Sparse to V^(3/2)
+        List<Pair> mst;
+        if (numEdges >= Math.pow(numVertices,1.5)) // Quite dense
+            mst = MSTPrimDense(s);
+        else
+            mst = MSTPrimSparse(s);
+
+        int cost = 0;
+        for (Pair e : mst)
+            cost += e.second;
+
+        return cost;
+    }
 }
 
 class EdgeList {
     public List<Triple> list;
     public boolean directed;
+    public int numVertices = -1;
 
     public EdgeList (boolean dir) {
         directed = dir;
         list = new ArrayList<Triple>();
     }
+
+    public EdgeList (int V, boolean dir) {
+        numVertices = V;
+        directed = dir;
+        list = new ArrayList<Triple>();
+    }
+
+    public void setVertices (int V) { numVertices = V; }
 
     public EdgeList (AdjacencyMatrix am) { // O(V^2), converting AM to EL
         directed = am.directed;
@@ -460,6 +549,35 @@ class EdgeList {
         System.out.println(list);
         System.out.println();
     }
+
+    public List<Triple> MSTKruskal () { // Decided to return in form of Edge List entries, runs in O(E log E)
+        UnionFind ufds = new UnionFind(numVertices);
+        KruskalComparator kc = new KruskalComparator();
+        list.sort(kc);
+
+        List<Triple> mst = new ArrayList<Triple>();
+        for (int i = 0; i < list.size(); i++) {
+            if (!ufds.isSameSet(list.get(i).first,list.get(i).second)) {
+                mst.add(list.get(i));
+                ufds.unionSet(list.get(i).first,list.get(i).second);
+            }
+            if (ufds.numDisjointSets() == 1) { // all vertices inside MST
+                break;
+            }
+        }
+
+        return mst;
+    }
+
+    public int MSTCost () {
+        List<Triple> mst = MSTKruskal();
+
+        int cost = 0;
+        for (Triple e : mst)
+            cost += e.third;
+
+        return cost;
+    }
 }
 
 class Pair implements Comparable<Pair> {
@@ -482,6 +600,15 @@ class Pair implements Comparable<Pair> {
             return this.first - other.first;
         else
             return this.second - other.second;
+    }
+}
+
+class PrimComparator implements Comparator<Pair> {
+    public int compare (Pair p1, Pair p2) {
+        if (p1.second == p2.second)
+            return p1.first - p2.first;
+        else
+            return p1.second - p2.second;
     }
 }
 
@@ -509,6 +636,61 @@ class Triple implements Comparable<Triple> {
             return this.second - other.second;
         // there won't be cases for equal first and second
     }
+}
+
+class KruskalComparator implements Comparator<Triple> {
+    public int compare (Triple t1, Triple t2) {
+        if (t1.third == t2.third) {
+            if (t1.first == t2.first)
+                return t1.second - t2.second;
+            else
+                return t1.first - t1.first;
+        } else
+            return t1.third - t2.third;
+    }
+}
+
+class UnionFind {
+    public int[] p;
+    public int[] rank;
+    public int numSets;
+
+    public UnionFind(int N) {
+        p = new int[N];
+        rank = new int[N];
+        numSets = N;
+        for (int i = 0; i < N; i++) {
+            p[i] = i;
+            rank[i] = 0;
+        }
+    }
+
+    public int findSet(int i) { 
+        if (p[i] == i) return i;
+        else {
+            p[i] = findSet(p[i]);
+            return p[i]; 
+        } 
+    }
+
+    public Boolean isSameSet(int i, int j) { return findSet(i) == findSet(j); }
+
+    public void unionSet(int i, int j) { 
+        if (!isSameSet(i, j)) { 
+            numSets--; 
+            int x = findSet(i), y = findSet(j);
+            // rank is used to keep the tree short
+            if (rank[x] > rank[y]) 
+            	p[y] = x;
+            else { 
+            	p[x] = y;
+                if (rank[x] == rank[y]) 
+                    rank[y] = rank[y]+1; 
+            } 
+        } 
+    }
+
+    public int numDisjointSets() { return numSets; }
 }
 
 class Graph {
@@ -569,6 +751,12 @@ class Graph {
     public void showEL () { el.printList(); }
 
     public void toposort (boolean useBFS) { System.out.println(useBFS ? al.toposortBFS() : al.toposortDFS()); }
+    
+    public void MSTPrim (int s, boolean useDense) { System.out.println(useDense ? al.MSTPrimDense(s) : al.MSTPrimSparse(s)); }
+    public void MSTKruskal () {
+        el.setVertices(numVertices);
+        System.out.println(el.MSTKruskal());
+    }
 }
 
 public class GraphDemo {
@@ -818,6 +1006,54 @@ public class GraphDemo {
         System.out.println();
     }
 
+    public static void testG10 () { // Test MST
+        // Tesellation
+        System.out.println("Test Tesellation");
+        Graph g10 = new Graph(9,false);
+        g10.connect(0,1,8);
+        g10.connect(0,2,12);
+        g10.connect(1,2,13);
+        g10.connect(1,3,25);
+        g10.connect(1,4,9);
+        g10.connect(2,3,14);
+        g10.connect(2,6,21);
+        g10.connect(3,4,20);
+        g10.connect(3,5,8);
+        g10.connect(3,6,12);
+        g10.connect(3,7,12);
+        g10.connect(3,8,16);
+        g10.connect(4,5,19);
+        g10.connect(5,7,11);
+        g10.connect(6,8,11);
+        g10.connect(7,8,9);
+
+        // All costs will be 82
+        System.out.println("Prim's MST from 0:");                               // both [<0,0>, <1,8>, <4,9>, <2,12>, <3,14>, <5,8>, <7,11>, <8,9>, <6,11>]
+        g10.MSTPrim(0,true);
+        g10.MSTPrim(0,false);   // Not in Visualgo
+        System.out.println("Prim's from 0's MST cost: "+g10.al.MSTCost(0));
+        System.out.println();
+        System.out.println("Prim's MST from 1:");                               // both [<1,0>, <0,8>, <4,9>, <2,12>, <3,14>, <5,8>, <7,11>, <8,9>, <6,11>]
+        g10.MSTPrim(1,true);
+        g10.MSTPrim(1,false);   // Not in Visualgo
+        System.out.println("Prim's from 1's MST cost: "+g10.al.MSTCost(1));
+        System.out.println();
+        System.out.println("Prim's MST from 3:");                               // both [<3,0>, <5,8>, <7,11>, <8,9>, <6,11>, <2,14>, <0,12>, <1,8>, <4,9>]
+        g10.MSTPrim(3,true);
+        g10.MSTPrim(3,false);   // Not in Visualgo
+        System.out.println("Prim's from 3's MST cost: "+g10.al.MSTCost(3));
+        System.out.println();
+        System.out.println("Prim's MST from 5:");                               // both [<5,0>, <3,8>, <7,11>, <8,9>, <6,11>, <2,14>, <0,12>, <1,8>, <4,9>]
+        g10.MSTPrim(5,true);
+        g10.MSTPrim(5,false);   // Not in Visualgo
+        System.out.println("Prim's from 5's MST cost: "+g10.al.MSTCost(5));
+        System.out.println();
+        System.out.println("Kruskal's MST:");
+        g10.MSTKruskal();                                                       // [<0,1,8>, <3,5,8>, <1,4,9>, <7,8,9>, <5,7,11>, <6,8,11>, <0,2,12>, <2,3,14>]
+        System.out.println("Kruskal's MST cost: "+g10.el.MSTCost());
+        System.out.println();
+    }
+
     public static void main (String[] args) {
         testG1();
         testG2();
@@ -828,13 +1064,14 @@ public class GraphDemo {
         testG7();
         testG8();
         testG9();
+        testG10();
 
         /*
         Note :
             To check whether a graph is DAG or not, simply compare toposortBFS with []. If equal, then it isn't a DAG
             To check whether a graph is a tree, we can simulate BFS and see if the length of the shortest path is equal to the traversal
             Finally, to check whether a graph is bipartite, we can again run BFS and allocate the vertexes travesed alternatively based on depth
-            The final statement is a work in progress :)
+            I'm not implementing these for now because I won't be needing these methods soon
         */
     }
 }
