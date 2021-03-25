@@ -173,7 +173,6 @@ class AdjacencyList {
         Collections.sort(list.get(a)); // O(n) just like insertion, not O(n log n)
         if (!directed) {
             list.get(b).add(new Pair(a,w));
-            numEdges++;
             Collections.sort(list.get(b)); // O(n) just like insertion, not O(n log n)
         }
     }
