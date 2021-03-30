@@ -501,6 +501,8 @@ class EdgeList {
     public List<Triple> list;
     public boolean directed;
     public int numVertices = -1;
+    public int[] D;
+    public int[] p;
 
     public EdgeList (boolean dir) {
         directed = dir;
@@ -576,6 +578,44 @@ class EdgeList {
             cost += e.third;
 
         return cost;
+    }
+
+    public void initSSSP (int s) {
+        D = new int[numVertices];
+        p = new int[numVertices];
+        for (int i = 0; i < numVertices; i++) {
+            D[i] = Integer.MAX_VALUE;
+            p[i] = -1;
+        }
+        D[s] = 0;
+    }
+
+    public void relax (int u, int v, int w) {
+        if (D[u] != Integer.MAX_VALUE && D[v] > D[u] + w) { // if SP can be shortened
+            D[v] = D[u] + w; // relax this edge
+            p[v] = u; // remember/update the predecessor
+        }
+    }
+
+    public int SSSPBellmanFord (int s, int t) { // returns the shortest path weight from s to t
+        initSSSP(s);
+        Triple edge;
+
+        for (int i = 0; i < numVertices-1; i++) {
+            for (int j = 0; j < list.size(); j++) {
+                edge = list.get(j);
+                relax(edge.first, edge.second, edge.third);
+            }
+        }
+
+        // Negative cycle check
+        for (int i = 0; i < list.size(); i++) {
+            edge = list.get(i);
+            if (D[edge.first] != Integer.MAX_VALUE && D[edge.second] > D[edge.first] + edge.third)
+                return -Integer.MAX_VALUE;
+        }
+
+        return D[t];
     }
 }
 
@@ -704,7 +744,8 @@ class Graph {
         numVertices = V;
         am = new AdjacencyMatrix(numVertices,directed);
         al = new AdjacencyList(numVertices,directed);
-        el = new EdgeList(directed);
+        el = new EdgeList(V, directed);
+        // el = new EdgeList(directed);
     }
 
     public Graph (AdjacencyMatrix mat) { // given an AM, create the AL and EL, will take O(V^2) for both DS
@@ -756,6 +797,7 @@ class Graph {
         el.setVertices(numVertices);
         System.out.println(el.MSTKruskal());
     }
+    public void doBellmanFord (int s, int t) { System.out.println(el.SSSPBellmanFord(s,t)); }
 }
 
 public class GraphDemo {
@@ -1053,7 +1095,32 @@ public class GraphDemo {
         System.out.println();
     }
 
+    public static void testG11 () { // Test SSSP
+        // CP3 4.17
+        System.out.println("Test SSSP with CP3 4.17");
+        Graph g11 = new Graph(5,true);
+        g11.connect(0,1,2);
+        g11.connect(0,3,7);
+        g11.connect(0,2,6);
+        g11.connect(1,4,6);
+        g11.connect(1,3,3);
+        g11.connect(3,4,5);
+        g11.connect(2,4,1);
+
+        for (int i = 1; i <= 4; i++) {
+            System.out.print("SSSP from 0 to " + i + " has total weight ");
+            g11.doBellmanFord(0,i);
+            /*
+            SSSP from 0 to 1 has total weight 2
+            SSSP from 0 to 2 has total weight 6
+            SSSP from 0 to 3 has total weight 5
+            SSSP from 0 to 4 has total weight 7
+            */
+        }
+    }
+
     public static void main (String[] args) {
+        /*
         testG1();
         testG2();
         testG3();
@@ -1064,6 +1131,9 @@ public class GraphDemo {
         testG8();
         testG9();
         testG10();
+        */
+
+        testG11();
 
         /*
         Note :
