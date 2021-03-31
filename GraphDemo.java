@@ -136,6 +136,7 @@ class AdjacencyList {
     public int[] parent; // for BFS/DFS
     public int[] indeg; // for toposort
     public int numEdges; // maybe useful, especially for Prim's
+    public int[] D; // for SSSP
 
     public AdjacencyList (int V, boolean dir) {
         directed = dir;
@@ -495,6 +496,46 @@ class AdjacencyList {
 
         return cost;
     }
+
+    // If the path is needed, just backtrack from parent
+    public void initSSSP (int s) {
+        D = new int[numVertices];
+        parent = new int[numVertices];
+        for (int i = 0; i < numVertices; i++) {
+            D[i] = Integer.MAX_VALUE;
+            parent[i] = -1;
+        }
+        D[s] = 0;
+    }
+
+    public void relax (int u, int v, int w) {
+        if (D[u] != Integer.MAX_VALUE && D[v] > D[u] + w) { // if SP can be shortened
+            D[v] = D[u] + w; // relax this edge
+            parent[v] = u; // remember/update the predecessor
+        }
+    }
+
+    public int SSSPDijkstra (int s, int t) { // Modified Dijkstra's Algorithm
+        initSSSP(s);
+
+        PrimComparator pc = new PrimComparator(); // The comparator is the same for Prim's (sort by weight then by dest)
+        PriorityQueue<Pair> pq = new PriorityQueue<Pair>(pc);
+        pq.offer(new Pair(s,0)); // recall my version of Pair is (dest, weight) not (weight, dest)
+
+        while (!pq.isEmpty()) {
+            Pair ud = pq.poll();
+            if (ud.second == D[ud.first]) { // important check, lazy DS
+                for (Pair e : list.get(ud.first)) {
+                    if (D[e.first] > D[ud.first] + e.second) { // can relax
+                        relax(ud.first, e.first, e.second); // relax
+                        pq.offer(new Pair(e.first,D[e.first]));
+                    }
+                }
+            }
+        }
+
+        return D[t];
+    }
 }
 
 class EdgeList {
@@ -580,6 +621,7 @@ class EdgeList {
         return cost;
     }
 
+    // If the path is needed, just backtrack from p
     public void initSSSP (int s) {
         D = new int[numVertices];
         p = new int[numVertices];
@@ -798,6 +840,7 @@ class Graph {
         System.out.println(el.MSTKruskal());
     }
     public void doBellmanFord (int s, int t) { System.out.println(el.SSSPBellmanFord(s,t)); }
+    public void doDijkstra (int s, int t) { System.out.println(al.SSSPDijkstra(s,t)); }
 }
 
 public class GraphDemo {
@@ -1095,7 +1138,7 @@ public class GraphDemo {
         System.out.println();
     }
 
-    public static void testG11 () { // Test SSSP
+    public static void testG11 () { // Test SSSP Bellman-Ford
         // CP3 4.17
         System.out.println("Test SSSP with CP3 4.17");
         Graph g11 = new Graph(5,true);
@@ -1117,10 +1160,49 @@ public class GraphDemo {
             SSSP from 0 to 4 has total weight 7
             */
         }
+        System.out.println();
+    }
+
+    public static void testG12 () { // Test SSSP Dijkstra
+        // Dijkstra's Killer
+        System.out.println("Test SSSP with Dijkstra's Killer");
+        Graph g12 = new Graph(11,true);
+        g12.connect(0,2,0);
+        g12.connect(2,4,0);
+        g12.connect(4,6,0);
+        g12.connect(6,8,0);
+        g12.connect(8,10,0);
+        g12.connect(0,1,16);
+        g12.connect(1,2,-32);
+        g12.connect(2,3,8);
+        g12.connect(3,4,-16);
+        g12.connect(4,5,4);
+        g12.connect(5,6,-8);
+        g12.connect(6,7,2);
+        g12.connect(7,8,-4);
+        g12.connect(8,9,1);
+        g12.connect(9,10,-2);
+
+        for (int i = 1; i <= 10; i++) {
+            System.out.print("SSSP from 0 to " + i + " has total weight ");
+            g12.doDijkstra(0,i);
+            /*
+            SSSP from 0 to 1 has total weight 16
+            SSSP from 0 to 2 has total weight -16
+            SSSP from 0 to 3 has total weight -8
+            SSSP from 0 to 4 has total weight -24
+            SSSP from 0 to 5 has total weight -20
+            SSSP from 0 to 6 has total weight -28
+            SSSP from 0 to 7 has total weight -26
+            SSSP from 0 to 8 has total weight -30
+            SSSP from 0 to 9 has total weight -29
+            SSSP from 0 to 10 has total weight -31
+            */
+        }
+        System.out.println();
     }
 
     public static void main (String[] args) {
-        /*
         testG1();
         testG2();
         testG3();
@@ -1131,9 +1213,8 @@ public class GraphDemo {
         testG8();
         testG9();
         testG10();
-        */
-
         testG11();
+        testG12();
 
         /*
         Note :
