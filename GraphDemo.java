@@ -5,16 +5,15 @@ class AdjacencyMatrix {
     public boolean directed;
     public int numVertices;
     public boolean weighted;
+    public int[][] D; // for SSSP
 
     public AdjacencyMatrix (int V, boolean dir) {
         directed = dir; // to store whether it's a directed or undirected graph
         numVertices = V;
         matrix = new int[V][V];
-        for (int i = 0; i < V; i++) {
-            for (int j = 0; j < V; j++) {
+        for (int i = 0; i < V; i++)
+            for (int j = 0; j < V; j++)
                 matrix[i][j] = 0;
-            }
-        }
         weighted = true;
     }
 
@@ -23,9 +22,8 @@ class AdjacencyMatrix {
         numVertices = al.numVertices;
         matrix = new int[numVertices][numVertices];
         for (int i = 0; i < numVertices; i++) {
-            for (int j = 0; j < numVertices; j++) {
+            for (int j = 0; j < numVertices; j++)
                 matrix[i][j] = 0;
-            }
             for (int j = 0; j < al.list.get(i).size(); j++) {
                 int k = al.list.get(i).get(j).first;
                 int w = al.list.get(i).get(j).second;
@@ -126,6 +124,23 @@ class AdjacencyMatrix {
         }
         matrix = newMatrix;
     }
+
+    public void initSSSP () { // Diagonals are set large values instead of 0 if to check negative cycle
+        D = new int[numVertices][numVertices];
+        int INF = 10000000;
+        for (int i = 0; i < numVertices; i++)
+            for (int j = 0; j < numVertices; j++)
+                D[i][j] = matrix[i][j] == 0 ? INF : matrix[i][j];
+    }
+
+    public int SSSSPFloydWarshall (int s, int t) {
+        initSSSP();
+        for (int k = 0; k < numVertices; k++)
+            for (int i = 0; i < numVertices; i++)
+                for (int j = 0; j < numVertices; j++)
+                    D[i][j] = Math.min(D[i][j], D[i][k] + D[k][j]);
+        return D[s][t];
+    }
 }
 
 class AdjacencyList {
@@ -142,9 +157,8 @@ class AdjacencyList {
         directed = dir;
         numVertices = V;
         list = new ArrayList<List<Pair>>();
-        for (int i = 0; i < V; i++) {
+        for (int i = 0; i < V; i++)
             list.add(new ArrayList<Pair>());
-        }
     }
 
     public AdjacencyList (AdjacencyMatrix am) { // Convert Adjacency Matrix to Adjacency List
@@ -227,9 +241,8 @@ class AdjacencyList {
                 t = parent[t];
             }
             System.out.print(s+"-");
-            while (!st.isEmpty()) {
+            while (!st.isEmpty())
                 System.out.print(st.pop()+"-");
-            }
             System.out.println("end");
         }
 
@@ -257,9 +270,8 @@ class AdjacencyList {
                 t = parent[t];
             }
             System.out.print(s+"-");
-            while (!st.isEmpty()) {
+            while (!st.isEmpty())
                 System.out.print(st.pop()+"-");
-            }
             System.out.println("end");
         }
 
@@ -274,9 +286,8 @@ class AdjacencyList {
             if (visited[list.get(u).get(i).first] == 0) {
                 parent[list.get(u).get(i).first] = u;
                 List<Integer> dfsrec = DFSRecursive(list.get(u).get(i).first);
-                for (int j : dfsrec) {
+                for (int j : dfsrec)
                     dfs.add(j);
-                }
             }
         }
 
@@ -307,9 +318,8 @@ class AdjacencyList {
         visited = new int[numVertices];
         parent = new int[numVertices];
 
-        for (int i = 0; i < numVertices; i++) {
+        for (int i = 0; i < numVertices; i++)
             visited[i] = 0; // Initialize to 0
-        }
 
         for (int i = 0; i < numVertices; i++) {
             if (visited[i] == 0) {
@@ -330,15 +340,13 @@ class AdjacencyList {
             parent[i] = -1;
         }
         for (int i = 0; i < numVertices; i++) {
-            for (int j = 0; j < list.get(i).size(); j++) {
+            for (int j = 0; j < list.get(i).size(); j++)
                 indeg[list.get(i).get(j).first]++;
-            }
         }
         Queue<Integer> q = new LinkedList<Integer>();
         for (int i = 0; i < numVertices; i++) {
-            if (indeg[i] == 0) {
+            if (indeg[i] == 0)
                 q.offer(i);
-            }
         }
         List<Integer> toposort = new ArrayList<Integer>();
 
@@ -748,25 +756,22 @@ class UnionFind {
 
     public int findSet(int i) { 
         if (p[i] == i) return i;
-        else {
-            p[i] = findSet(p[i]);
-            return p[i]; 
-        } 
+        else return p[i] = findSet(p[i]);
     }
 
-    public Boolean isSameSet(int i, int j) { return findSet(i) == findSet(j); }
+    public boolean isSameSet(int i, int j) { return findSet(i) == findSet(j); }
 
-    public void unionSet(int i, int j) { 
-        if (!isSameSet(i, j)) { 
-            numSets--; 
+    public void unionSet(int i, int j) {
+        if (!isSameSet(i, j)) {
+            numSets--;
             int x = findSet(i), y = findSet(j);
             // rank is used to keep the tree short
-            if (rank[x] > rank[y]) 
-            	p[y] = x;
-            else { 
-            	p[x] = y;
-                if (rank[x] == rank[y]) 
-                    rank[y] = rank[y]+1; 
+            if (rank[x] > rank[y])
+                p[y] = x;
+            else {
+                p[x] = y;
+                if (rank[x] == rank[y])
+                    rank[y] = rank[y]+1;
             } 
         } 
     }
@@ -841,6 +846,7 @@ class Graph {
     }
     public void doBellmanFord (int s, int t) { System.out.println(el.SSSPBellmanFord(s,t)); }
     public void doDijkstra (int s, int t) { System.out.println(al.SSSPDijkstra(s,t)); }
+    public void doFloydWarshall (int s, int t) { System.out.println(am.SSSSPFloydWarshall(s,t)); }
 }
 
 public class GraphDemo {
@@ -1202,6 +1208,26 @@ public class GraphDemo {
         System.out.println();
     }
 
+    public static void testG13 () { // Test APSP
+        System.out.println("Test APSP");
+        Graph g13 = new Graph(5,true);
+        g13.connect(0,1,2);
+        g13.connect(0,2,1);
+        g13.connect(0,4,3);
+        g13.connect(1,3,4);
+        g13.connect(2,1,1);
+        g13.connect(2,4,1);
+        g13.connect(3,0,1);
+        g13.connect(3,2,3);
+        g13.connect(3,4,3);
+        for (int i = 0; i < 5; i++)
+            for (int j = 0; j < 5; j++)
+                if (i != j) {
+                    System.out.print("Shortest path between " + i + " and " + j + ": ");
+                    g13.doFloydWarshall(i,j);
+                }
+    }
+
     public static void main (String[] args) {
         testG1();
         testG2();
@@ -1215,6 +1241,7 @@ public class GraphDemo {
         testG10();
         testG11();
         testG12();
+        testG13();
 
         /*
         Note :
