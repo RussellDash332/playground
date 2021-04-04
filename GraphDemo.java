@@ -133,7 +133,7 @@ class AdjacencyMatrix {
                 D[i][j] = matrix[i][j] == 0 ? INF : matrix[i][j];
     }
 
-    public int SSSSPFloydWarshall (int s, int t) {
+    public int APSPFloydWarshall (int s, int t) {
         initSSSP();
         for (int k = 0; k < numVertices; k++)
             for (int i = 0; i < numVertices; i++)
@@ -846,7 +846,7 @@ class Graph {
     }
     public void doBellmanFord (int s, int t) { System.out.println(el.SSSPBellmanFord(s,t)); }
     public void doDijkstra (int s, int t) { System.out.println(al.SSSPDijkstra(s,t)); }
-    public void doFloydWarshall (int s, int t) { System.out.println(am.SSSSPFloydWarshall(s,t)); }
+    public void doFloydWarshall (int s, int t) { System.out.println(am.APSPFloydWarshall(s,t)); }
 }
 
 public class GraphDemo {
