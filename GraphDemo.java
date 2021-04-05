@@ -674,7 +674,7 @@ class EdgeList {
         for (int i = 0; i < list.size(); i++) {
             edge = list.get(i);
             if (D[edge.first] != Integer.MAX_VALUE && D[edge.second] > D[edge.first] + edge.third)
-                return -Integer.MAX_VALUE;
+                return -Integer.MAX_VALUE; // unofficial return value but this means there exists a negative cycle
         }
 
         return D[t];
