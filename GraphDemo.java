@@ -661,21 +661,30 @@ class EdgeList {
 
     public int SSSPBellmanFord (int s, int t) { // returns the shortest path weight from s to t
         initSSSP(s);
-        Triple edge;
 
-        for (int i = 0; i < numVertices-1; i++) {
-            for (int j = 0; j < list.size(); j++) {
-                edge = list.get(j);
+        for (int i = 0; i < numVertices-1; i++)
+            for (Triple edge : list)
                 relax(edge.first, edge.second, edge.third);
-            }
-        }
 
         // Negative cycle check
-        for (int i = 0; i < list.size(); i++) {
-            edge = list.get(i);
+        for (Triple edge : list)
             if (D[edge.first] != Integer.MAX_VALUE && D[edge.second] > D[edge.first] + edge.third)
                 return -Integer.MAX_VALUE; // unofficial return value but this means there exists a negative cycle
+
+        /*
+        // The real negative cycle check
+        boolean stillFound = true;
+        while (stillFound) {
+            stillFound = false;
+            for (Triple edge : list) {
+                if (D[edge.first] != INF && D[edge.second] > D[edge.first] + edge.third && !neg[edge.second]) {
+                    D[edge.second] = -INF; // don't use Long.MAX_VALUE nor Integer.MAX_VALUE
+                    neg[edge.second] = true;
+                    stillFound = true;
+                }
+            }
         }
+        */
 
         return D[t];
     }
