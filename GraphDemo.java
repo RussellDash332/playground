@@ -135,10 +135,22 @@ class AdjacencyMatrix {
 
     public int APSPFloydWarshall (int s, int t) {
         initSSSP();
+
+        int INF = 10000000;
+
         for (int k = 0; k < numVertices; k++)
             for (int i = 0; i < numVertices; i++)
                 for (int j = 0; j < numVertices; j++)
                     D[i][j] = Math.min(D[i][j], D[i][k] + D[k][j]);
+                    // Can also use Math.min(D[i][j], (D[i][k] == INF || D[k][j] == INF) ? INF : D[i][k]+D[k][j])
+
+        // Negative cycles
+        for (int i = 0; i < numVertices; i++)
+            for (int j = 0; j < numVertices; j++)
+                for (int k = 0; k < numVertices && D[i][j] != -INF; k++)
+                    if (D[i][k] != INF && D[k][j] != INF && D[k][k] < 0)
+                        D[i][j] = -INF;
+
         return D[s][t];
     }
 }
