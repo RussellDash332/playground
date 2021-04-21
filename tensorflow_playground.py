@@ -99,7 +99,7 @@ def train_mnist():
 
     # Fit model with training data
     history = model.fit(training_images, training_labels, epochs=5, callbacks=[callback])
-    # history = model.fit(train_generator, steps_per_epoch=8, epochs=15, verbose=1, validation_data = validation_generator, validation_steps=8))
+    # history = model.fit(train_generator, steps_per_epoch=8, epochs=15, verbose=1, validation_data = validation_generator, validation_steps=8)
 
     # Evaluate model based on test data
     test_loss = model.evaluate(test_images, test_labels)
