@@ -430,7 +430,7 @@ class AdjacencyList {
         }
 
         // In lecture, process K from last to first, which the same as toposort from first to last!
-        for (int i = 0; i < toposort.size(); i++) {
+        for (int i : toposort) {
             if (transposedAL.visited[i] == 0) {
                 SCC++;
                 transposedAL.DFSRecursive(i);
