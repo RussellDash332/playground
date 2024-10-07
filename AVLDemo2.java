@@ -1,14 +1,15 @@
 // Special AVL Tree that handles duplicates
+import java.util.*;
 
-class Vertex {
-    public Vertex parent, left, right;
-    public int key;
+class Vertex<U extends Comparable<U>> {
+    public Vertex<U> parent, left, right;
+    public U key;
     public int height;
     public int size;
     public int count; // we add a new attribute count for storing frequency
 
     // Constructor
-    public Vertex(int v) { 
+    public Vertex(U v) { 
         key = v;
         parent = left = right = null;
         height = 0;
@@ -17,39 +18,41 @@ class Vertex {
     }
 }
 
-class AVL {
-    public Vertex root;
+class AVL<U extends Comparable<U>> {
+    public Vertex<U> root;
+    public U defaultValue;
 
-    public AVL() {
-        root = null;
+    public AVL(U defaultValue) {
+        this.root = null;
+        this.defaultValue = defaultValue;
     }
 
-    public int search(int v) {
-        Vertex res = search(root, v);
-        return res == null ? -1 : res.key;
+    public U search(U v) {
+        Vertex<U> res = search(root, v);
+        return res == null ? this.defaultValue : res.key;
     }
 
     // Helper method for search
-    public Vertex search(Vertex T, int v) {
+    public Vertex<U> search(Vertex<U> T, U v) {
         if (T == null)
             return null;                // not found
-        else if (T.key == v)
+        else if (T.key.compareTo(v) == 0)
             return T;                   // found
-        else if (T.key < v)
+        else if (T.key.compareTo(v) < 0)
             return search(T.right, v);  // search to the right
         else
             return search(T.left, v);   // search to the left
     }
     
-    public int findMin() {
+    public U findMin() {
         return findMin(root);
     }
 
     // Helper method for findMin
-    public int findMin(Vertex T) {
+    public U findMin(Vertex<U> T) {
         // Empty tree
         if (T == null) {
-            return -1;
+            return this.defaultValue;
         }
 
         // Non-empty tree
@@ -59,15 +62,15 @@ class AVL {
             return findMin(T.left);     // go to the left
     }
 
-    public int findMax() {
+    public U findMax() {
         return findMax(root);
     }
 
     // Helper method for findMax
-    public int findMax(Vertex T) {
+    public U findMax(Vertex<U> T) {
         // Empty tree
         if (T == null) {
-            return -1;
+            return this.defaultValue;
         }
 
         // Non-empty tree
@@ -77,45 +80,45 @@ class AVL {
             return findMax(T.right);    // go to the right
     }
 
-    public int successor(int v) {
-        Vertex vPos = search(root, v);
-        return vPos == null ? -1 : successor(vPos);
+    public U successor(U v) {
+        Vertex<U> vPos = search(root, v);
+        return vPos == null ? this.defaultValue : successor(vPos);
     }
 
     // Helper method for successor
-    public int successor(Vertex T) {
+    public U successor(Vertex<U> T) {
         if (T.right != null)                    // this subtree has a right subtree
             return findMin(T.right);            // the successor is the minimum of right subtree
         else {
-            Vertex par = T.parent;
-            Vertex cur = T;
+            Vertex<U> par = T.parent;
+            Vertex<U> cur = T;
             // if par(ent) is not root and cur(rent) is its right children
             while ((par != null) && (cur == par.right)) {
                 cur = par;                      // continue moving up
                 par = cur.parent;
             }
-            return par == null ? -1 : par.key;  // this is the successor of T
+            return par == null ? this.defaultValue : par.key;  // this is the successor of T
         }
     }
 
-    public int predecessor(int v) {
-        Vertex vPos = search(root, v);
-        return vPos == null ? -1 : predecessor(vPos);
+    public U predecessor(U v) {
+        Vertex<U> vPos = search(root, v);
+        return vPos == null ? this.defaultValue : predecessor(vPos);
     }
 
     // Helper method for predecessor
-    public int predecessor(Vertex T) {
+    public U predecessor(Vertex<U> T) {
         if (T.left != null)                     // this subtree has a left subtree
             return findMax(T.left);             // the successor is the maximum of left subtree
         else {
-            Vertex par = T.parent;
-            Vertex cur = T;
+            Vertex<U> par = T.parent;
+            Vertex<U> cur = T;
             // if par(ent) is not root and cur(rent) is its left children
             while ((par != null) && (cur == par.left)) {
                 cur = par;                      // continue moving up
                 par = cur.parent;
             }
-            return par == null ? -1 : par.key;  // this is the predecessor of T
+            return par == null ? this.defaultValue : par.key;  // this is the predecessor of T
         }
     }
 
@@ -126,69 +129,64 @@ class AVL {
     }
 
     // Helper method for inorder
-    public void inorder(Vertex T) {
+    public void inorder(Vertex<U> T) {
         if (T == null)
             return;
         inorder(T.left);                    // recursively go to the left
         for (int i = 0; i < T.count; i++)
-            System.out.printf(" %d", T.key);    // visit this node for T.count times
+            System.out.print(" " + T.key.toString());    // visit this node for T.count times
         inorder(T.right);                   // recursively go to the right
     }
 
-    public void updateHeight(Vertex T) {
-        if (T.left != null && T.right != null)  // have both L and R children
-            T.height = Math.max(T.left.height,T.right.height) + 1;
-        else if (T.left != null) // have only L children
-            T.height = T.left.height + 1;
-        else if (T.right != null) // have only R children
-            T.height = T.right.height + 1;
-        else // no children, is leaf
-            T.height = 0;
+    public int height(Vertex<U> T) {
+        if (T == null)
+            return -1;
+        else
+            return T.height;
+    }
+
+    public int size(Vertex<U> T) {
+        if (T == null)
+            return 0;
+        else
+            return T.size;
+    }
+
+    public void updateHeight(Vertex<U> T) {
+        T.height = 1 + Math.max(height(T.left), height(T.right));
     }
 
     // Since the AVL can have duplicate values, we store the frequency in the count attribute for each vertex
-    public void updateSize(Vertex T) {
-        // conditioning similar to updateHeight
-        if (T.left != null && T.right != null)
-            T.size = T.left.size + T.right.size + T.count;
-        else if (T.left != null)
-            T.size = T.left.size + T.count;
-        else if (T.right != null)
-            T.size = T.right.size + T.count;
-        else // both are null
-            T.size = T.count;
+    public void updateSize(Vertex<U> T) {
+        T.size = size(T.left) + size(T.right) + T.count;
     }
 
-    // Balance factor of a vertex T
-    public int bf(Vertex T) {
-        if (T.left != null && T.right != null)
-            return T.left.height - T.right.height;
-        else if (T.left != null)
-            return T.left.height + 1;
-        else if (T.right != null)
-            return -1 - T.right.height;
-        else
+    // Balance factor of a Vertex<U> T
+    public int bf(Vertex<U> T) {
+        if (T == null)
             return 0;
+        else
+            return height(T.left) - height(T.right);
     }
 
-    public void insert(int v) {
+    public void insert(U v) {
         root = insert(root, v);
     }
 
     // Helper method for insert
-    public Vertex insert(Vertex T, int v) {
+    public Vertex<U> insert(Vertex<U> T, U v) {
         if (T == null)
             return new Vertex(v);           // insertion point is found
 
-        if (T.key < v) {                    // search to the right
+        if (T.key.compareTo(v) < 0) {                    // search to the right
             T.right = insert(T.right, v);
             T.right.parent = T;
         }
-        else if (T.key > v) {               // search to the left
+        else if (T.key.compareTo(v) > 0) {               // search to the left
             T.left = insert(T.left, v);
             T.left.parent = T;
         }
-        else // T.key == v, v exists!
+        else // T.key.compareTo(v) == 0, v exists!
             T.count++; // increment the frequency
 
         updateHeight(T);
@@ -198,18 +196,18 @@ class AVL {
         return T;                           // return the updated tree
     }  
 
-    public void delete(int v) {
+    public void delete(U v) {
         root = delete(root, v);
     }
 
     // Helper method for delete
-    public Vertex delete(Vertex T, int v) {
+    public Vertex<U> delete(Vertex<U> T, U v) {
         if (T == null)
             return T;                                       // cannot find the item to be deleted
 
-        if (T.key < v)                                      // search to the right
+        if (T.key.compareTo(v) < 0)                                      // search to the right
             T.right = delete(T.right, v);
-        else if (T.key > v)                                 // search to the left
+        else if (T.key.compareTo(v) > 0)                                 // search to the left
             T.left = delete(T.left, v);
         else {                                              // this is the node to be deleted
             if (T.count == 1) {
@@ -224,7 +222,7 @@ class AVL {
                     T = T.left;                                 // bypass T
                 }
                 else {                                          // has two children, find successor
-                    int successorV = successor(v);
+                    U successorV = successor(v);
                     T.key = successorV;                         // replace this key with the successor's key
                     T.right = delete(T.right, successorV);      // delete the old successorV
                 }
@@ -242,8 +240,8 @@ class AVL {
         return T; // return the updated tree
     }
 
-    public Vertex leftRotate(Vertex T) { // given T.right is not null
-        Vertex w = T.right;
+    public Vertex<U> leftRotate(Vertex<U> T) { // given T.right is not null
+        Vertex<U> w = T.right;
         w.parent = T.parent;
         T.parent = w;
         T.right = w.left;
@@ -259,8 +257,8 @@ class AVL {
         return w;
     }
 
-    public Vertex rightRotate(Vertex T) { // given T.left is not null
-        Vertex w = T.left;
+    public Vertex<U> rightRotate(Vertex<U> T) { // given T.left is not null
+        Vertex<U> w = T.left;
         w.parent = T.parent;
         T.parent = w;
         T.left = w.right;
@@ -276,7 +274,7 @@ class AVL {
         return w;
     }
 
-    public Vertex rebalance(Vertex T) {
+    public Vertex<U> rebalance(Vertex<U> T) {
         if (T != null) {
             if (bf(T) == 2) { // T has a left child
                 if (bf(T.left) == -1) { // LR case
@@ -299,34 +297,46 @@ class AVL {
         return T;
     }
 
-    public int rank(int k) {
+    public int rank(U k) {
         return rank(root, k);
     }
 
     // Helper method for rank
     // Rank of k in a subtree of root T
-    public int rank(Vertex T, int k) { // O(log N)
-        if (T.key == k)             // it's the root
-            if (T.left != null)
-                return T.left.size + 1;
-            else
-                return 1;
-        else if (T.key > k)         // k is somewhere in the left of the subtree
+    public int rank(Vertex<U> T, U k) { // O(log N)
+        if (T == null)
+            return 0;
+        else if (T.key.compareTo(k) == 0)        // it's the root
+            return size(T.left) + 1;
+        else if (T.key.compareTo(k) > 0)         // k is somewhere in the left of the subtree
             return rank(T.left, k);
-        else                        // k is somewhere in the right of the subtree
-            if (T.left != null)
-                return rank(T.right, k) + T.left.size + T.count; // it's not itself, so add T.count instead of 1
-            else
-                return rank(T.right, k) + T.count; // similar to above
+        else                                     // k is somewhere in the right of the subtree
+            return rank(T.right, k) + size(T.left) + T.count;
     }
 
     // Selects the node with rank k
-    public Vertex select(int k) {
+    public Vertex<U> select(int k) {
         return select(root, k);
     }
 
+    public int countRanged(U a, U b) {
+        return countRanged(root, a, b);
+    }
+
+    public int countRanged(Vertex<U> T, U a, U b) {
+        if (T == null)
+            return 0;
+        if (T.key.compareTo(a) == 0 && T.key.compareTo(b) == 0)
+            return 1;
+        if (T.key.compareTo(a) >= 0 && T.key.compareTo(b) <= 0)
+            return 1 + countRanged(T.left, a, b) + countRanged(T.right, a, b);
+        if (T.key.compareTo(a) < 0)
+            return countRanged(T.right, a, b);
+        return countRanged(T.left, a, b);
+    }
+
     // Helper method for select
-    public Vertex select(Vertex T, int k) { // O(log N)
+    public Vertex<U> select(Vertex<U> T, int k) { // O(log N)
         if ((T.left == null && 1 <= k && k <= T.count) || (T.left != null && T.left.size + 1 <= k && k <= T.left.size + T.count))
             return T;
         else if ((T.left == null && k > T.count) || (T.left != null && k > T.left.size + T.count)) // T is somewhere in the right of the subtree
@@ -336,16 +346,16 @@ class AVL {
     }
 
     // Lowest common ancestor. Assuming a and b is contained in the tree
-    public int LCA(int a, int b) {
+    public U LCA(U a, U b) {
         return LCA(root, a, b);
     }
 
     // Helper method for LCA, no parent pointer used
-    public int LCA(Vertex T, int a, int b) {    // O(log N)
-        int maxVal = Math.max(a,b), minVal = Math.min(a,b);
-        if (T.key > maxVal)                     // current node is larger, go left
+    public U LCA(Vertex<U> T, U a, U b) {    // O(log N)
+        U maxVal = a.compareTo(b) > 0 ? a : b, minVal = a.compareTo(b) < 0 ? a : b;
+        if (T.key.compareTo(maxVal) > 0)        // current node is larger, go left
             return LCA(T.left, a, b);
-        else if (T.key < minVal)                // current node is too low, go right
+        else if (T.key.compareTo(minVal) < 0)   // current node is too low, go right
             return LCA(T.right, a, b);
         else                                    // this means minVal <= T.key <= maxVal
             return T.key;
@@ -355,7 +365,7 @@ class AVL {
 // https://visualgo.net/en/bst?mode=AVL&create=41,20,65,11,32,50,91,29,37,72,99
 public class AVLDemo2 {
     public static void main (String[] args) {
-        AVL avl = new AVL();
+        AVL<Integer> avl = new AVL<Integer>(-1);
 
         /*
         We want the tree to be initially
@@ -567,7 +577,7 @@ public class AVLDemo2 {
             2       6       10                      18
         */
         System.out.println();
-        AVL avl2 = new AVL();
+        AVL<Integer> avl2 = new AVL<Integer>(-1);
         int[] vertices2 = {8,6,16,3,7,13,19,2,11,15,18,10};
         for (int v : vertices2) {
             avl2.insert(v);
@@ -607,7 +617,7 @@ public class AVLDemo2 {
         System.out.println(avl2.predecessor(avl2.root.right.left.key)*avl2.successor(avl2.root.key));       // 195
 
         System.out.println();
-        AVL avl3 = new AVL();
+        AVL<Integer> avl3 = new AVL<Integer>(-1);
         int[] vertices3 = {9,8,7,8,7,6,6,6,5,4,1,1,2,3,3,3,3};
         for (int v : vertices3) {
             avl3.insert(v);
