@@ -45,48 +45,53 @@ class AVL<U extends Comparable<U>> {
     }
     
     public U findMin() {
-        return findMin(root);
+        Vertex<U> v = findMin(root);
+        return v == null ? this.defaultValue : v.key;
     }
 
     // Helper method for findMin
-    public U findMin(Vertex<U> T) {
+    public Vertex<U> findMin(Vertex<U> T) {
         // Empty tree
         if (T == null) {
-            return this.defaultValue;
+            return null;
         }
 
         // Non-empty tree
         if (T.left == null)
-            return T.key;               // this is the min
+            return T;                   // this is the min
         else
             return findMin(T.left);     // go to the left
     }
 
     public U findMax() {
-        return findMax(root);
+        Vertex<U> v = findMax(root);
+        return v == null ? this.defaultValue : v.key;
     }
 
     // Helper method for findMax
-    public U findMax(Vertex<U> T) {
+    public Vertex<U> findMax(Vertex<U> T) {
         // Empty tree
         if (T == null) {
-            return this.defaultValue;
+            return null;
         }
 
         // Non-empty tree
         if (T.right == null)
-            return T.key;               // this is the max
+            return T;                   // this is the max
         else
             return findMax(T.right);    // go to the right
     }
 
-    public U successor(U v) {
+    public U successor(U v) {   // assumes v exists in the tree (otherwise, can dummy-insert and redelete later)
         Vertex<U> vPos = search(root, v);
-        return vPos == null ? this.defaultValue : successor(vPos);
+        if (vPos == null)
+            return this.defaultValue;
+        Vertex<U> succV = successor(vPos);
+        return succV == null ? this.defaultValue : succV.key;
     }
 
     // Helper method for successor
-    public U successor(Vertex<U> T) {
+    public Vertex<U> successor(Vertex<U> T) {
         if (T.right != null)                    // this subtree has a right subtree
             return findMin(T.right);            // the successor is the minimum of right subtree
         else {
@@ -97,17 +102,20 @@ class AVL<U extends Comparable<U>> {
                 cur = par;                      // continue moving up
                 par = cur.parent;
             }
-            return par == null ? this.defaultValue : par.key;  // this is the successor of T
+            return par;  // this is the successor of T
         }
     }
 
-    public U predecessor(U v) {
+    public U predecessor(U v) { // assumes v exists in the tree (otherwise, can dummy-insert and redelete later)
         Vertex<U> vPos = search(root, v);
-        return vPos == null ? this.defaultValue : predecessor(vPos);
+        if (vPos == null)
+            return this.defaultValue;
+        Vertex<U> predV = predecessor(vPos);
+        return predV == null ? this.defaultValue : predV.key;
     }
 
     // Helper method for predecessor
-    public U predecessor(Vertex<U> T) {
+    public Vertex<U> predecessor(Vertex<U> T) {
         if (T.left != null)                     // this subtree has a left subtree
             return findMax(T.left);             // the successor is the maximum of left subtree
         else {
@@ -118,7 +126,7 @@ class AVL<U extends Comparable<U>> {
                 cur = par;                      // continue moving up
                 par = cur.parent;
             }
-            return par == null ? this.defaultValue : par.key;  // this is the predecessor of T
+            return par;  // this is the predecessor of T
         }
     }
 
@@ -170,24 +178,27 @@ class AVL<U extends Comparable<U>> {
     }
 
     public void insert(U v) {
-        root = insert(root, v);
+        root = insert(root, v, 1);
     }
 
     // Helper method for insert
-    public Vertex<U> insert(Vertex<U> T, U v) {
-        if (T == null)
-            return new Vertex(v);           // insertion point is found
+    public Vertex<U> insert(Vertex<U> T, U v, int count) {
+        if (T == null) {
+            Vertex<U> newV = new Vertex<U>(v);
+            newV.count = count;
+            return newV;           // insertion point is found
+        }
 
         if (T.key.compareTo(v) < 0) {                    // search to the right
-            T.right = insert(T.right, v);
+            T.right = insert(T.right, v, count);
             T.right.parent = T;
         }
         else if (T.key.compareTo(v) > 0) {               // search to the left
-            T.left = insert(T.left, v);
+            T.left = insert(T.left, v, count);
             T.left.parent = T;
         }
         else // T.key.compareTo(v) == 0, v exists!
-            T.count++; // increment the frequency
+            T.count += count; // increase the frequency
 
         updateHeight(T);
         updateSize(T);
@@ -197,20 +208,20 @@ class AVL<U extends Comparable<U>> {
     }  
 
     public void delete(U v) {
-        root = delete(root, v);
+        root = delete(root, v, 1);
     }
 
     // Helper method for delete
-    public Vertex<U> delete(Vertex<U> T, U v) {
+    public Vertex<U> delete(Vertex<U> T, U v, int count) {
         if (T == null)
             return T;                                       // cannot find the item to be deleted
 
         if (T.key.compareTo(v) < 0)                                      // search to the right
-            T.right = delete(T.right, v);
+            T.right = delete(T.right, v, count);
         else if (T.key.compareTo(v) > 0)                                 // search to the left
-            T.left = delete(T.left, v);
+            T.left = delete(T.left, v, count);
         else {                                              // this is the node to be deleted
-            if (T.count == 1) {
+            if (T.count <= count) {
                 if (T.left == null && T.right == null)          // this is a leaf
                     T = null;                                   // simply erase this node for good
                 else if (T.left == null && T.right != null) {   // only one child at right
@@ -222,9 +233,10 @@ class AVL<U extends Comparable<U>> {
                     T = T.left;                                 // bypass T
                 }
                 else {                                          // has two children, find successor
-                    U successorV = successor(v);
-                    T.key = successorV;                         // replace this key with the successor's key
-                    T.right = delete(T.right, successorV);      // delete the old successorV
+                    Vertex<U> successorV = successor(search(root, v));
+                    T.key = successorV.key;                                         // replace this key with the successor's key
+                    T.count = successorV.count;                                     // replace the count too!
+                    T.right = delete(T.right, successorV.key, successorV.count);    // delete the old successorV
                 }
             } else  // no need to delete key from the tree, decrement frequency
                 T.count--;
@@ -408,7 +420,7 @@ public class AVLDemo2 {
         System.out.println(avl.predecessor(41));    // 32
         System.out.println(avl.predecessor(99));    // 91
         System.out.println(avl.LCA(11,37));         // 20
-        System.out.println(avl.LCA(29,37));         // 29
+        System.out.println(avl.LCA(29,37));         // 32
         System.out.println(avl.LCA(99,11));         // 41
         System.out.println(avl.LCA(99,50));         // 65
         System.out.println(avl.root.size);          // 10
@@ -615,6 +627,13 @@ public class AVLDemo2 {
         System.out.println(avl2.root.left.right.left.key);                                                  // 10
         System.out.println(avl2.root.right.right.left.key);                                                 // 18
         System.out.println(avl2.predecessor(avl2.root.right.left.key)*avl2.successor(avl2.root.key));       // 195
+        avl2.insert(18);
+        avl2.insert(18);
+        avl2.insert(18);
+        avl2.delete(16);
+        avl2.inorder(); //  2 3 6 8 10 11 13 15 18 18 18 18 19
+        System.out.println(avl2.predecessor(18));                                                           // 15
+        System.out.println(avl2.successor(18));                                                             // 19
 
         System.out.println();
         AVL<Integer> avl3 = new AVL<Integer>(-1);
